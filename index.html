@@ -3,36 +3,384 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <link rel="stylesheet" href="style.css">
-    <title>QR code generator</title>
+
+    <title>QR Code Generator</title>
 </head>
+
 <body>
-    <div class="container">
-        <p>Enter your Text or URL</p>
-        <input type="text" placeholder="Text or URL" id="qrText">
 
-        <div id="imgBox">
-            <img src="" id="qrImage">
+    <main class="container">
+
+        <div class="header">
+            <div class="icon">▦</div>
+
+            <h1>QR Code Generator</h1>
+
+            <p>Generate QR codes from text, URLs, or images.</p>
         </div>
-        <button onclick="generateQR()">Generate QR Code</button>
 
-    </div>
+        <!-- Tabs -->
+        <div class="tabs">
+
+            <button class="tab active" onclick="showTextMode()">
+                Text / URL
+            </button>
+
+            <button class="tab" onclick="showImageMode()">
+                Image
+            </button>
+
+        </div>
+
+
+        <!-- Text / URL -->
+        <div id="textSection">
+
+            <div class="form-group">
+
+                <label for="qrText">
+                    Text or URL
+                </label>
+
+                <input
+                    type="text"
+                    id="qrText"
+                    placeholder="Enter text or paste a URL..."
+                    autocomplete="off"
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- Image Upload -->
+        <div id="imageSection" class="hidden">
+
+            <label for="imageInput" class="upload-box">
+
+                <div class="upload-icon">
+                    ↑
+                </div>
+
+                <strong>Upload an image</strong>
+
+                <span>
+                    PNG, JPG, JPEG or WEBP
+                </span>
+
+                <input
+                    type="file"
+                    id="imageInput"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    hidden
+                >
+
+            </label>
+
+
+            <div id="imagePreview" class="image-preview">
+
+                <img
+                    id="previewImage"
+                    src=""
+                    alt="Image preview"
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- QR Code -->
+        <div id="imgBox">
+
+            <img
+                src=""
+                id="qrImage"
+                alt="Generated QR Code"
+            >
+
+        </div>
+
+
+        <!-- Generate -->
+        <button onclick="generateQR()" id="generateBtn">
+            Generate QR Code
+        </button>
+
+
+        <!-- Download -->
+        <button
+            onclick="downloadQR()"
+            id="downloadBtn"
+            class="download-btn"
+        >
+            ↓ &nbsp; Download QR Code
+        </button>
+
+
+        <p id="errorMessage" class="error-message"></p>
+
+
+        <div class="footer">
+            <span>Fast</span>
+            <span>•</span>
+            <span>Simple</span>
+            <span>•</span>
+            <span>Free</span>
+        </div>
+
+    </main>
+
 
     <script>
-        let imgBox = document.getElementById("imgBox");
-        let qrImage = document.getElementById("qrImage");
-        let qrText = document.getElementById("qrText");
+
+        const imgBox = document.getElementById("imgBox");
+        const qrImage = document.getElementById("qrImage");
+        const qrText = document.getElementById("qrText");
+
+        const imageInput = document.getElementById("imageInput");
+        const previewImage = document.getElementById("previewImage");
+        const imagePreview = document.getElementById("imagePreview");
+
+        const errorMessage = document.getElementById("errorMessage");
+
+        const textSection = document.getElementById("textSection");
+        const imageSection = document.getElementById("imageSection");
+
+        const downloadBtn = document.getElementById("downloadBtn");
+
+        const tabs = document.querySelectorAll(".tab");
+
+        let currentMode = "text";
+        let uploadedImageURL = null;
 
 
+        /*
+         * Text / URL mode
+         */
+        function showTextMode() {
 
-        function generateQR(){
-            qrImage.src =  "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + qrText.value;
-            imgBox.classList.add("show-img");
+            currentMode = "text";
+
+            textSection.classList.remove("hidden");
+            imageSection.classList.add("hidden");
+
+            tabs[0].classList.add("active");
+            tabs[1].classList.remove("active");
+
+            errorMessage.textContent = "";
+
         }
 
+
+        /*
+         * Image mode
+         */
+        function showImageMode() {
+
+            currentMode = "image";
+
+            textSection.classList.add("hidden");
+            imageSection.classList.remove("hidden");
+
+            tabs[0].classList.remove("active");
+            tabs[1].classList.add("active");
+
+            errorMessage.textContent = "";
+
+        }
+
+
+        /*
+         * Image upload
+         */
+        imageInput.addEventListener("change", function () {
+
+            const file = this.files[0];
+
+            if (!file) {
+                return;
+            }
+
+
+            if (!file.type.startsWith("image/")) {
+
+                errorMessage.textContent =
+                    "Please select a valid image.";
+
+                return;
+            }
+
+
+            errorMessage.textContent = "";
+
+
+            /*
+             * Create temporary image URL
+             */
+            uploadedImageURL =
+                URL.createObjectURL(file);
+
+
+            previewImage.src =
+                uploadedImageURL;
+
+
+            imagePreview.classList.add(
+                "show-preview"
+            );
+
+        });
+
+
+        /*
+         * Generate QR Code
+         */
+        function generateQR() {
+
+            let data = "";
+
+
+            /*
+             * Text / URL
+             */
+            if (currentMode === "text") {
+
+                data = qrText.value.trim();
+
+
+                if (data === "") {
+
+                    errorMessage.textContent =
+                        "Please enter some text or a URL.";
+
+                    qrText.focus();
+
+                    return;
+                }
+
+            }
+
+
+            /*
+             * Image
+             */
+            if (currentMode === "image") {
+
+                if (!uploadedImageURL) {
+
+                    errorMessage.textContent =
+                        "Please upload an image first.";
+
+                    return;
+                }
+
+                data = uploadedImageURL;
+
+            }
+
+
+            errorMessage.textContent = "";
+
+
+            /*
+             * Generate QR
+             */
+            qrImage.src =
+                "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" +
+                encodeURIComponent(data);
+
+
+            imgBox.classList.add("show-img");
+
+
+            /*
+             * Show download button
+             */
+            downloadBtn.classList.add("show-download");
+
+        }
+
+
+        /*
+         * Download QR Code
+         */
+        async function downloadQR() {
+
+            if (!qrImage.src) {
+
+                errorMessage.textContent =
+                    "Generate a QR code first.";
+
+                return;
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(qrImage.src);
+
+                const blob =
+                    await response.blob();
+
+
+                const downloadURL =
+                    URL.createObjectURL(blob);
+
+
+                const link =
+                    document.createElement("a");
+
+
+                link.href = downloadURL;
+
+                link.download =
+                    "qr-code.png";
+
+
+                document.body.appendChild(link);
+
+                link.click();
+
+                document.body.removeChild(link);
+
+
+                URL.revokeObjectURL(
+                    downloadURL
+                );
+
+            } catch (error) {
+
+                errorMessage.textContent =
+                    "Unable to download QR code. Please try again.";
+
+            }
+
+        }
+
+
+        /*
+         * Enter key
+         */
+        qrText.addEventListener(
+            "keypress",
+            function (event) {
+
+                if (event.key === "Enter") {
+
+                    generateQR();
+
+                }
+
+            }
+        );
+
     </script>
-
-
 
 </body>
 </html>
